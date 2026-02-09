@@ -32,6 +32,16 @@ export function useAllRooms() {
   return { data, isLoading, error }
 }
 
+
+export function useRoom(roomId: string) {
+  const { data, isLoading, error } = useQuery<Room>({
+    queryKey: ["room", roomId],
+    queryFn: () => api.getRoomById(roomId),
+    enabled: !!roomId,
+  });
+  return { data, isLoading, error };
+}
+
 export function useAllBookings() {
   const { data = [], isLoading, error } = useQuery({
     queryKey: ["all-bookings"],
@@ -84,12 +94,10 @@ export function useUpdateRoom() {
   });
 }
 
-export function useBookRoom() {
+export function useCreateBooking() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: ({ roomId, userId, ...bookingData }: { roomId: string; userId: string;[key: string]: any }) =>
-      api.bookRoom({ roomId, userId, ...bookingData }),
+    mutationFn: (bookingData: any) => api.createBooking(bookingData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["all-rooms"] });
@@ -100,9 +108,39 @@ export function useBookRoom() {
   });
 }
 
+export function useUpdateBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, bookingData }: { id: string | number; bookingData: any }) =>
+      api.updateBooking(id, bookingData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking"] });
+    },
+  });
+}
+
+export function useBooking(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["booking", id],
+    queryFn: () => api.getBookingById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useDeleteBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-bookings"] });
+    },
+  });
+}
+
 export function useCancelBooking() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (bookingId: string) => api.cancelBooking(bookingId),
     onSuccess: () => {
@@ -111,6 +149,58 @@ export function useCancelBooking() {
     },
     onError: (err: unknown) => {
       console.error("Cancel error:", err);
+    },
+  });
+}
+
+/* =======================
+   SERVICE BOOKINGS
+======================= */
+export function useAllServiceBookings() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-service-bookings"],
+    queryFn: api.getAllServiceBookings,
+  });
+  return { data, isLoading, error };
+}
+
+export function useServiceBooking(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["service-booking", id],
+    queryFn: () => api.getServiceBookingById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateServiceBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => api.createServiceBooking(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
+    },
+  });
+}
+
+export function useUpdateServiceBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+      api.updateServiceBooking(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["service-booking"] });
+    },
+  });
+}
+
+export function useDeleteServiceBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteServiceBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-service-bookings"] });
     },
   });
 }
@@ -133,6 +223,14 @@ export function useAllRoomTypes() {
   const { data = [], isLoading, error } = useQuery({
     queryKey: ["room-types"],
     queryFn: api.getAllRoomTypes,
+  });
+  return { data, isLoading, error };
+}
+
+export function usePublicRoomTypes() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["public-room-types"],
+    queryFn: api.getRoomTypes,
   });
   return { data, isLoading, error };
 }
@@ -168,5 +266,126 @@ export function useDeleteRoomType() {
   });
 }
 
+/* =======================
+   SERVICES
+======================= */
+export function useAllServices() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-services"],
+    queryFn: api.getAllServices,
 
+    retry: false,
+  });
+  return { data, isLoading, error };
+}
+
+export function useService(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["service", id],
+    queryFn: () => api.getServiceById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (formData: FormData) => api.createService(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-services"] });
+    },
+  });
+}
+
+export function useUpdateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, formData }: { id: string | number; formData: FormData }) =>
+      api.updateService(id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-services"] });
+      queryClient.invalidateQueries({ queryKey: ["service"] });
+    },
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-services"] });
+    },
+  });
+}
+
+/* =======================
+   INVENTORY
+======================= */
+export function useAllInventory() {
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ["all-inventory"],
+    queryFn: api.getAllInventory,
+  });
+  return { data, isLoading, error };
+}
+
+export function useInventory(id: string | number) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["inventory", id],
+    queryFn: () => api.getInventoryById(id),
+    enabled: !!id,
+  });
+  return { data, isLoading, error };
+}
+
+export function useCreateInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => api.createInventory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
+    },
+  });
+}
+
+export function useUpdateInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: any }) =>
+      api.updateInventory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+}
+
+export function useDeleteInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string | number) => api.deleteInventory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-inventory"] });
+    },
+  });
+}
+
+
+/* =======================
+   PAYPAL HOOKS
+======================= */
+
+export function useCreatePaypalOrder() {
+  return useMutation({
+    mutationFn: (bookingId: number | string) => api.createPaypalOrder(bookingId),
+  });
+}
+
+export function useCapturePaypalOrder() {
+  return useMutation({
+    mutationFn: (orderId: string) => api.capturePaypalOrder(orderId),
+  });
+}
 

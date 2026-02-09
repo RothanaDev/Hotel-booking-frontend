@@ -1,13 +1,17 @@
-export interface RoomType {
-  id: number;
-  typeName: string;
-  description: string;
-  price: number;
-}
-
 export interface Room {
-  id: number;
-  status: string;
-  image: string;
-  roomType: RoomType;
+  id: string | number;
+  roomType: string | {
+    id: string | number;
+    typeName: string;
+    description?: string;
+    price?: number;
+  };
+  roomPrice?: number;
+  status?: string;
+  booked?: boolean;
+  image?: string;
+  photo?: string;
+  roomPhotoUrl?: string;
+  roomDescription?: string;
+  roomTypeId?: string | number;
 }

@@ -92,7 +92,7 @@ export default function Footer() {
                   className="text-amber-500 mt-1 flex-shrink-0"
                 />{" "}
                 <span className="text-gray-300">
-                  123 Luxury Avenue, New York, NY 10001
+                  Kampot Province, Cambodia
                 </span>{" "}
               </li>{" "}
               <li className="flex items-center space-x-2 text-sm">

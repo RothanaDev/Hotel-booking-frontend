@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AuthUser } from "@/types/auth";
-import type { Room } from "@/types/Room";
+import type { Room } from "@/types/room";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -9,12 +9,9 @@ const api = axios.create({
 });
 const authHeader = () => {
   const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
-  if (!token) return {};
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
@@ -57,14 +54,13 @@ api.interceptors.response.use(
           // Retry original request with new access token
           originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
           return api(originalRequest);
-        } catch (refreshError) {
+        } catch (refreshError: any) {
           logout();
-          window.location.href = "/login";
           return Promise.reject(refreshError);
         }
       } else {
-        logout();
-        window.location.href = "/login";
+
+        return Promise.reject(error);
       }
     }
 
@@ -152,26 +148,43 @@ export async function deleteUser(userId: string) {
   return data;
 }
 
-/* =======================
-   ROOMS
-======================= */
-
 export async function addRoom(formData: FormData) {
-  try {
-    const { data } = await api.post("/api/v1/rooms/create", formData, {
-      headers: {
-        ...authHeader(),
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return data;
-  } catch (error) {
-    console.error("Error in addRoom:", error);
-    throw error;
-  }
+  const { data } = await api.post("/api/v1/rooms/create", formData, {
+    headers: { ...authHeader() }, // ✅
+  });
+  return data;
 }
 
-export async function updateRoom(roomId: string | number, formData: FormData) {
+
+
+
+
+export async function getRoomTypes() {
+  const { data } = await api.get("/api/v1/rooms/types");
+  return data;
+}
+
+export async function getAllRooms() {
+  const { data } = await api.get("/api/v1/rooms/findAll"); // ✅ no headers
+  return Array.isArray(data) ? data : (data.roomList || data.data || []);
+}
+
+export async function getRoomById(roomId: string): Promise<Room> {
+  const { data } = await api.get(`/api/v1/rooms/findById/${roomId}`, {
+    headers: authHeader(),
+  });
+  return data.room || data.roomData || data.data || data;
+}
+
+export async function deleteRoom(roomId: string) {
+  const { data } = await api.delete(
+    `/api/v1/rooms/delete/${roomId}`,
+    { headers: authHeader() }
+  );
+  return data;
+}
+
+export async function updateRoom(roomId: string, formData: FormData) {
   const { data } = await api.put(`/api/v1/rooms/update/${roomId}`, formData, {
     headers: {
       ...authHeader(),
@@ -181,43 +194,22 @@ export async function updateRoom(roomId: string | number, formData: FormData) {
   return data;
 }
 
-export async function getRoomById(roomId: string | number): Promise<Room> {
-  const { data } = await api.get(`/api/v1/rooms/findById/${roomId}`, {
-    headers: authHeader(),
-  });
-  return data;
-}
-
-export async function getAllRooms() {
-  try {
-    const { data } = await api.get("/api/v1/rooms/findAll", {
-      headers: authHeader(),
-    });
-    return data;
-  } catch (error) {
-    console.error("Error fetching rooms:", error);
-    return [];
-  }
-}
-
-export async function deleteRoom(roomId: string | number) {
-  const { data } = await api.delete(`/api/v1/rooms/delete/${roomId}`, {
-    headers: authHeader(),
-  });
-  return data;
-}
-
 /* =======================
    ROOM TYPES
 ======================= */
 export async function getAllRoomTypes() {
   try {
-    const { data } = await api.get("/api/v1/roomTypes/findAll", {
-      headers: authHeader(),
-    });
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const { data } = await api.get("/api/v1/roomTypes/findAll", config);
     return data;
-  } catch (error) {
-    console.error("Error fetching room types:", error);
+  } catch (error: any) {
+    const status = error?.response?.status;
+    if (status === 401) {
+      console.warn("getAllRoomTypes: unauthorized (401)");
+    } else {
+      console.error("Error fetching room types:", status ?? error?.message);
+    }
     return [];
   }
 }
@@ -246,10 +238,24 @@ export async function deleteRoomType(id: string | number) {
 /* =======================
    BOOKINGS
 ======================= */
-export async function bookRoom(booking: any) {
-  const { data } = await api.post(
-    "/api/v1/bookings/create",
-    booking,
+// export async function createBooking(booking: any) {
+//   const { data } = await api.post(
+//     `${API_BASE_URL}/api/v1/bookings/create`,
+//     booking,
+//     { headers: authHeader() }
+//   );
+//   return data;
+// }
+export async function createBooking(booking: any) {
+  const { data } = await api.post("/api/v1/bookings/create", booking);
+  return data;
+}
+
+
+export async function updateBooking(id: string | number, bookingData: any) {
+  const { data } = await api.put(
+    `/api/v1/bookings/update/${id}`,
+    bookingData,
     { headers: authHeader() }
   );
   return data;
@@ -260,6 +266,7 @@ export async function getAllBookings() {
     const { data } = await api.get("/api/v1/bookings/findAll", {
       headers: authHeader(),
     });
+    // Ensure we return an array
     return Array.isArray(data) ? data : (data.bookingList || data.data || []);
   } catch (error) {
     console.error("Error fetching bookings:", error);
@@ -267,10 +274,23 @@ export async function getAllBookings() {
   }
 }
 
+export async function getBookingById(id: string | number) {
+  const { data } = await api.get(`/api/v1/bookings/findById/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function deleteBooking(id: string | number) {
+  const { data } = await api.delete(`/api/v1/bookings/delete/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
 
 export async function getUserBookings(userId: string) {
   const { data } = await api.get(
-    `/api/v1/users/get-user-bookings/${userId}`,
+    `/api/v1/bookings/user/${userId}`,
     { headers: authHeader() }
   );
   return data;
@@ -284,22 +304,62 @@ export async function getBookingByConfirmationCode(code: string) {
 }
 
 export async function cancelBooking(bookingId: string) {
+  // This seems to be a custom endpoint in the previous code, 
+  // but typically delete or update status is used. 
+  // Keeping it if the backend supports it, otherwise use deleteBooking.
   try {
-    console.log("Canceling booking:", bookingId);
-
     const { data } = await api.get(
       `/api/v1/bookings/cancel/${bookingId}`,
-      {
-        headers: authHeader()
-      }
+      { headers: authHeader() }
     );
-
-    console.log("Cancel success:", data);
     return data;
   } catch (error: any) {
     console.error("Cancel booking error:", error.response?.data);
     throw error;
   }
+}
+
+/* =======================
+   SERVICE BOOKINGS
+======================= */
+export async function getAllServiceBookings() {
+  try {
+    const { data } = await api.get("/api/v1/booking_services/findAll", {
+      headers: authHeader(),
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching service bookings:", error);
+    return [];
+  }
+}
+
+export async function getServiceBookingById(id: string | number) {
+  const { data } = await api.get(`/api/v1/booking_services/findById/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function createServiceBooking(data: any) {
+  const { data: response } = await api.post("/api/v1/booking_services/create", data, {
+    headers: authHeader(),
+  });
+  return response;
+}
+
+export async function updateServiceBooking(id: string | number, data: any) {
+  const { data: response } = await api.put(`/api/v1/booking_services/update/${id}`, data, {
+    headers: authHeader(),
+  });
+  return response;
+}
+
+export async function deleteServiceBooking(id: string | number) {
+  const { data } = await api.delete(`/api/v1/booking_services/delete/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
 }
 
 /* =======================
@@ -333,3 +393,117 @@ export function isUser() {
 export function isStaff() {
   return localStorage.getItem("role") === "STAFF";
 }
+
+/* =======================
+   SERVICES
+======================= */
+export async function getAllServices() {
+  try {
+    const { data } = await api.get("/api/v1/services/findAll", {
+      headers: authHeader(),
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    return [];
+  }
+}
+
+
+export async function getServiceById(id: string | number) {
+  const { data } = await api.get(`/api/v1/services/findById/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function createService(formData: FormData) {
+  const { data } = await api.post("/api/v1/services/create", formData, {
+    headers: { ...authHeader(), "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function updateService(id: string | number, formData: FormData) {
+  const { data } = await api.put(`/api/v1/services/update/${id}`, formData, {
+    headers: { ...authHeader(), "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function deleteService(id: string | number) {
+  const { data } = await api.delete(`/api/v1/services/delete/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+/* =======================
+   INVENTORY
+======================= */
+export async function getAllInventory() {
+  try {
+    const { data } = await api.get("/api/v1/inventory/findAll", {
+      headers: authHeader(),
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching inventory:", error);
+    return [];
+  }
+}
+
+export async function getInventoryById(id: string | number) {
+  const { data } = await api.get(`/api/v1/inventory/findById/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function createInventory(inventoryData: any) {
+  const { data } = await api.post("/api/v1/inventory/create", inventoryData, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function updateInventory(id: string | number, inventoryData: any) {
+  const { data } = await api.put(`/api/v1/inventory/update/${id}`, inventoryData, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+export async function deleteInventory(id: string | number) {
+  const { data } = await api.delete(`/api/v1/inventory/delete/${id}`, {
+    headers: authHeader(),
+  });
+  return data;
+}
+
+/* =======================
+   PAYPAL PAYMENTS
+======================= */
+
+export type PaypalCreateOrderResponse = {
+  orderId: string;
+  approvalUrl: string;
+};
+
+export type PaypalCaptureResponse = {
+  orderId: string;
+  captureId: string | null;
+  status: string;
+};
+
+export async function createPaypalOrder(bookingId: number | string): Promise<PaypalCreateOrderResponse> {
+  const { data } = await api.post(`/api/v1/payments/paypal/create/${bookingId}`);
+  return data;
+}
+
+export async function capturePaypalOrder(orderId: string): Promise<PaypalCaptureResponse> {
+  const { data } = await api.post(`/api/v1/payments/paypal/capture`, { orderId });
+  return data;
+}
+
+

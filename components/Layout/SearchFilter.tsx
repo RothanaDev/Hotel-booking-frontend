@@ -33,7 +33,7 @@ export default function RoomFilters({
   return (
     <Card className="border border-slate-200 bg-white shadow-sm">
       <CardContent className="p-4 md:p-6">
-        <div className="grid gap-4 md:grid-cols-2 md:items-end">
+        <div className="grid gap-4 md:grid-cols-3 md:items-end">
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700">
               Search
@@ -67,6 +67,7 @@ export default function RoomFilters({
               </SelectContent>
             </Select>
           </div>
+
         </div>
       </CardContent>
     </Card>
