@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import CartDrawer from '@/components/Booking/CartDrawer';
 import { useCart } from '@/components/Booking/CartContext';
-import { logout as apiLogout } from '@/lib/api';
+import { logout as apiLogout, isAuthenticated as checkAuth } from '@/lib/auth';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,6 +28,7 @@ export default function Header() {
 
   const baseLinks = [
     { href: '/', label: 'Home' },
+    { href: '/rooms', label: 'Rooms' },
     { href: '/service', label: 'Services' },
     { href: '/about', label: 'About' },
   ];
@@ -41,16 +42,16 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-    const raw = localStorage.getItem('currentUser');
-    if (raw) {
-      setCurrentUserEmail(raw);
-      if (raw.includes('@')) {
-        const namePart = raw.split('@')[0];
+    const isLoggedIn = checkAuth();
+    setIsAuthenticated(isLoggedIn);
+    const email = localStorage.getItem('currentUser');
+    if (email) {
+      setCurrentUserEmail(email);
+      if (email.includes('@')) {
+        const namePart = email.split('@')[0];
         setDisplayName(namePart);
       } else {
-        setDisplayName(raw);
+        setDisplayName(email);
       }
     }
   }, []);
@@ -185,8 +186,6 @@ export default function Header() {
                       </div>
                     </div>
                     <nav className="flex flex-col">
-                      <Link href="/profile" className="px-4 py-2 hover:bg-gray-50">My Profile</Link>
-                      <Link href="/settings" className="px-4 py-2 hover:bg-gray-50">Settings</Link>
                       <button
                         onClick={() => {
                           apiLogout();

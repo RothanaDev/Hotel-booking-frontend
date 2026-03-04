@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCart } from "@/components/Booking/CartContext";
 import { createBooking, createPaypalOrder } from "@/lib/api";
+import { isAuthenticated as checkAuth } from "@/lib/auth";
 import { Stepper, type StepKey } from "@/components/Booking/Stepper";
 import {
   Trash2,
@@ -31,10 +32,7 @@ export default function CheckoutClient() {
 
   useEffect(() => setMounted(true), []);
 
-  const isAuthenticated =
-    typeof window !== "undefined"
-      ? !!(localStorage.getItem("accessToken") || localStorage.getItem("token"))
-      : false;
+  const isAuthenticated = checkAuth();
 
   const userId =
     typeof window !== "undefined"

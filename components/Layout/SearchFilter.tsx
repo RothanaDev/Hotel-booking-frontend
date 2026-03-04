@@ -51,14 +51,14 @@ export default function RoomFilters({
 
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700">
-              Room Type
+              Room 
             </label>
             <Select value={type} onValueChange={setType}>
               <SelectTrigger className="h-11 bg-white border-slate-300 focus:ring-amber-500">
                 <SelectValue placeholder="All Room Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Room Types</SelectItem>
+                <SelectItem value="all">All Room</SelectItem>
                 <SelectItem value="Standard">Standard</SelectItem>
                 <SelectItem value="Deluxe">Deluxe</SelectItem>
                 <SelectItem value="Suite">Suite</SelectItem>

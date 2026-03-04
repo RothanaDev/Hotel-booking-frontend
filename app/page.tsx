@@ -1,161 +1,33 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Star,
-  Tv,
-  Wifi,
-  Wind,
-  MapPin,
-  Map as MapIcon,
-  Navigation,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Star, MapPin, Navigation, Calendar, Search } from "lucide-react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import RoomFilters from "@/components/Layout/SearchFilter";
-import { getAllRooms, isAuthenticated } from "@/lib/api";
-import type { Room } from "@/types/room";
-import { useAllRoomTypes, useAllServices } from "@/hooks/use-queries";
-import BookingModal from "@/components/Booking/BookingModal";
+import { useMemo, useState } from "react";
+import RoomSection from "@/components/Room/RoomSection";
 
-const getRoomTypeName = (roomType: Room["roomType"]): string => {
-  if (typeof roomType === "string") return roomType;
-  return roomType?.typeName || "";
-};
-
-const getRoomTypeDescription = (roomType: Room["roomType"]): string => {
-  if (typeof roomType === "string") return "";
-  return roomType?.description || "";
-};
-
-const getRoomTypePrice = (roomType: Room["roomType"]): number => {
-  if (typeof roomType === "string") return 0;
-  return roomType?.price || 0;
-};
-
-function RoomSkeletonGrid() {
-  return (
-    <motion.div
-      key="loading"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full"
-    >
-      {Array.from({ length: 8 }).map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: i * 0.05, ease: "easeOut" }}
-          className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm flex flex-col h-full"
-        >
-          <div className="relative h-64">
-            <div className="absolute inset-0 skeleton" />
-          </div>
-
-          <div className="p-6 flex flex-col flex-1">
-            <div className="space-y-3">
-              <div className="h-5 w-3/4 rounded-xl skeleton" />
-              <div className="h-4 w-full rounded-xl skeleton" />
-              <div className="h-4 w-5/6 rounded-xl skeleton" />
-            </div>
-
-            <div className="flex items-center gap-4 mt-auto pt-6 border-t border-slate-50">
-              <div className="h-4 w-14 rounded-xl skeleton" />
-              <div className="h-4 w-16 rounded-xl skeleton" />
-              <div className="h-4 w-12 rounded-xl skeleton" />
-            </div>
-
-            <div className="mt-6 h-12 rounded-xl skeleton" />
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
-  );
-}
+const toISODate = (d: Date) => d.toISOString().split("T")[0];
 
 export default function Home() {
-  const [loading, setLoading] = useState(true);
-
-  const { data: roomTypes = [] } = useAllRoomTypes();
-  const { data: services = [] } = useAllServices();
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<any | null>(null);
-
-  const allRoomsRef = useRef<Room[]>([]);
-
-  const [keyword, setKeyword] = useState("");
-  const [type, setType] = useState("all");
-  const [price, setPrice] = useState("any");
-  const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
-
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchRooms() {
-      try {
-        const data = await getAllRooms();
-        if (Array.isArray(data)) {
-          const availableRooms = data.filter(
-            (room) => room.status === "available" || room.status === "Available"
-          );
-          allRoomsRef.current = availableRooms;
-          setFilteredRooms(availableRooms);
-        }
-      } catch (error) {
-        console.error("Failed to fetch rooms", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchRooms();
-  }, []);
+  const today = useMemo(() => new Date(), []);
+  const tomorrow = useMemo(() => new Date(Date.now() + 86400000), []);
 
-  useEffect(() => {
-    let result = [...allRoomsRef.current];
+  const [checkIn, setCheckIn] = useState(toISODate(today));
+  const [checkOut, setCheckOut] = useState(toISODate(tomorrow));
 
-    if (keyword) {
-      const lowerKeyword = keyword.toLowerCase();
-      result = result.filter((room) => {
-        const typeName = getRoomTypeName(room.roomType);
-        const description = getRoomTypeDescription(room.roomType);
-        return (
-          typeName.toLowerCase().includes(lowerKeyword) ||
-          description.toLowerCase().includes(lowerKeyword)
-        );
-      });
-    }
+  const onSearch = () => {
+    if (!checkIn || !checkOut) return;
 
-    if (type !== "all") {
-      result = result.filter((room) =>
-        getRoomTypeName(room.roomType).toLowerCase().includes(type.toLowerCase())
-      );
-    }
-
-    // NOTE: you have a "price" state, but no price filter logic in your original code.
-    // Keep it as-is for now.
-
-    setFilteredRooms(result);
-  }, [keyword, type, price]);
-
-  const openBookingModal = (room: Room) => {
-    if (!isAuthenticated()) {
-      router.push("/register");
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert("Check-out must be after check-in.");
       return;
     }
-    const roomImage = (room as any).image || (room as any).photo || (room as any).roomPhotoUrl;
-    setSelectedRoom({
-      id: room.id,
-      price: getRoomTypePrice(room.roomType),
-      title: getRoomTypeName(room.roomType),
-      image: roomImage,
-    });
-    setModalOpen(true);
+
+    router.push(`/rooms?checkIn=${checkIn}&checkOut=${checkOut}`);
   };
 
   return (
@@ -177,27 +49,88 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 container mx-auto px-4">
-          <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
-            Experience <span className="">Luxury</span> Redefined
-          </h1>
-          <p className="text-xl md:text-xl font-light mb-8 max-w-2xl mx-auto text-gray-100">
-            Discover unparalleled comfort and world-class hospitality at RNHotel.
-            Your journey to extraordinary begins here.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/rooms"
-              className="!bg-blue-500 hover:!bg-blue-500 text-white px-8 py-3 rounded-md font-medium transition-colors text-lg"
-            >
-              Browse Rooms
-            </Link>
-            <Link
-              href="/service"
-              className="border-2 border-blue-500 text-white hover:bg-blue-500/10 px-8 py-3 rounded-md font-medium transition-colors text-lg"
-            >
-              Explore Services
-            </Link>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl md:text-7xl font-serif font-bold mb-6 tracking-tight">
+              Find Your Perfect Stay
+            </h1>
+            <p className="text-lg md:text-xl font-light mb-12 max-w-2xl mx-auto text-gray-200">
+              Discover unparalleled comfort and world-class hospitality at
+              RNHotel. Your journey to extraordinary begins here.
+            </p>
+          </motion.div>
+
+          {/* Search Bar */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="bg-white/10 backdrop-blur-sm p-2 rounded-2xl md:rounded-full border border-white/20 shadow-2xl flex flex-col md:flex-row items-center gap-2">
+              <div className="flex-1 flex w-full">
+                {/* Check-in */}
+                <div className="flex-1 flex items-center px-6 py-3 border-r border-white/10 hover:bg-white/5 transition-colors group">
+                  <div className="text-blue-400 mr-4 group-hover:scale-110 transition-transform">
+                    <Calendar className="w-6 h-6" />
+                  </div>
+                  <div className="text-left w-full">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      Check-in
+                    </p>
+                    <input
+                      type="date"
+                      value={checkIn}
+                      min={toISODate(today)}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setCheckIn(next);
+
+                        // Auto-fix checkout if invalid
+                        if (new Date(checkOut) <= new Date(next)) {
+                          const d = new Date(next);
+                          d.setDate(d.getDate() + 1);
+                          setCheckOut(toISODate(d));
+                        }
+                      }}
+                      className="bg-transparent border-none outline-none text-white text-sm font-semibold w-full [color-scheme:dark]"
+                    />
+                  </div>
+                </div>
+
+                {/* Check-out */}
+                <div className="flex-1 flex items-center px-6 py-3 hover:bg-white/5 transition-colors group cursor-pointer rounded-r-2xl md:rounded-r-none">
+                  <div className="text-blue-400 mr-4 group-hover:scale-110 transition-transform">
+                    <Calendar className="w-6 h-6" />
+                  </div>
+                  <div className="text-left w-full">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      Check-out
+                    </p>
+                    <input
+                      type="date"
+                      value={checkOut}
+                      min={checkIn}
+                      onChange={(e) => setCheckOut(e.target.value)}
+                      className="bg-transparent border-none outline-none text-white text-sm font-semibold w-full [color-scheme:dark]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Button */}
+              <button
+                onClick={onSearch}
+                className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white px-10 py-5 rounded-xl md:rounded-full font-bold flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] active:scale-95 group"
+              >
+                <Search className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                <span>Search Rooms</span>
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -213,10 +146,12 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-6">
-                Welcome to <span className="text-blue-600 italic">RN Hotel</span>
+                Welcome to{" "}
+                <span className="text-blue-600 italic">RN Hotel</span>
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed max-w-2xl mx-auto font-light">
-                Experience a sanctuary where modern luxury meets timeless Kampot charm.
+                Experience a sanctuary where modern luxury meets timeless Kampot
+                charm.
               </p>
 
               {/* Compact Modern Location Bar */}
@@ -296,8 +231,9 @@ export default function Home() {
                     className="grayscale hover:grayscale-0 transition-all duration-700"
                   />
                   <Link
-                    href="https://maps.google.com"
+                    href="https://www.google.com/maps?q=RN+Hotel+Kampot"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-600 shadow-sm border border-white/40 hover:bg-blue-600 hover:text-white transition-all transform hover:scale-105"
                   >
                     Open Maps
@@ -310,144 +246,7 @@ export default function Home() {
       </section>
 
       {/* ROOMS */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-2">
-          <div className="text-center mb-5">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-6">
-                Our <span className="text-blue-600 italic">Luxurious</span> Rooms
-              </h2>
-              <p className="text-gray-500 text-lg max-w-2xl mx-auto font-light leading-relaxed">
-                Choose from our collection of elegantly appointed rooms and suites,
-                each designed for ultimate comfort and sophistication.
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="mb-16">
-            <RoomFilters
-              keyword={keyword}
-              setKeyword={setKeyword}
-              type={type}
-              setType={setType}
-              price={price}
-              setPrice={setPrice}
-            />
-          </div>
-
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <RoomSkeletonGrid />
-            ) : filteredRooms.length > 0 ? (
-              <motion.div
-                key="rooms"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-              >
-                {filteredRooms.map((room, idx) => (
-                  <motion.div
-                    key={room.id}
-                    initial={{ opacity: 0, y: 26 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.5, delay: idx * 0.06, ease: "easeOut" }}
-                    className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100 flex flex-col h-full group"
-                  >
-                    <div className="relative h-55 overflow-hidden">
-                      {(() => {
-                        const img =
-                          (room as any).image 
-                        return img ? (
-                          <Image
-                            src={img}
-                            alt={getRoomTypeName(room.roomType)}
-                            fill
-                            unoptimized
-                            className="object-cover transition-transform duration-700 group-hover:scale-110"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-medium">
-                            No Image Available
-                          </div>
-                        );
-                      })()}
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-blue-600 shadow-sm">
-                        ${getRoomTypePrice(room.roomType)} / night
-                      </div>
-                    </div>
-
-                    <div className="p-4 flex flex-col flex-1">
-                      <div className="mb-2">
-                        <h3 className="text-xl font-serif font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
-                          {getRoomTypeName(room.roomType)}
-                        </h3>
-                        <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed">
-                          {getRoomTypeDescription(room.roomType)}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-5 mt-auto pt-2 border-t border-slate-50">
-                        <div className="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
-                          <Tv size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">
-                            TV
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
-                          <Wifi size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">
-                            WIFI
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
-                          <Wind size={16} />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">
-                            AC
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => openBookingModal(room)}
-                        className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-semibold transition-all duration-300 transform active:scale-95 shadow-md"
-                      >
-                        Book Now
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="col-span-full text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200"
-              >
-                <p className="text-slate-400 font-medium">
-                  No rooms match your criteria.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <BookingModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            room={selectedRoom}
-            services={services}
-          />
-        </div>
-      </section>
+      <RoomSection />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import React from "react";
 import { CheckCircle2, Circle } from "lucide-react";
 
-export type StepKey = "review" | "checkout" | "payment" | "confirm";
+export type StepKey = "select" | "checkout" | "payment" | "confirm";
 
 interface StepperProps {
     current: StepKey;
@@ -11,7 +11,7 @@ interface StepperProps {
 
 export function Stepper({ current }: StepperProps) {
     const steps: { key: StepKey; label: string }[] = [
-        { key: "review", label: "Review" },
+        { key: "select", label: "Select" },
         { key: "checkout", label: "Checkout" },
         { key: "payment", label: "Payment" },
         { key: "confirm", label: "Confirm" },

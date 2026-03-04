@@ -20,8 +20,11 @@ const IMAGE_BASE = "http://localhost:8080";
 function resolveImageUrl(raw: string | undefined): string | null {
   if (!raw || typeof raw !== "string" || !raw.trim()) return null;
   const trimmed = raw.trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  return trimmed.startsWith("/") ? `${IMAGE_BASE}${trimmed}` : `${IMAGE_BASE}/${trimmed}`;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://"))
+    return trimmed;
+  return trimmed.startsWith("/")
+    ? `${IMAGE_BASE}${trimmed}`
+    : `${IMAGE_BASE}/${trimmed}`;
 }
 
 function getBookingRoomImage(b: any): string | null {
@@ -102,11 +105,13 @@ function getStatusConfig(status: string) {
 export default function HistoryClient() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [roomImageByRoomId, setRoomImageByRoomId] = useState<Record<string, string>>({});
+  const [roomImageByRoomId, setRoomImageByRoomId] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     const userId = Number(
-      localStorage.getItem("userId") || localStorage.getItem("user_id") || 0
+      localStorage.getItem("userId") || localStorage.getItem("user_id") || 0,
     );
     if (!userId) {
       setBookings([]);
@@ -115,7 +120,9 @@ export default function HistoryClient() {
     }
     getUserBookings(userId.toString())
       .then((data) => {
-        setBookings(Array.isArray(data) ? data : data?.bookings ?? data ?? []);
+        setBookings(
+          Array.isArray(data) ? data : (data?.bookings ?? data ?? []),
+        );
       })
       .catch(() => setBookings([]))
       .finally(() => setLoading(false));
@@ -128,8 +135,10 @@ export default function HistoryClient() {
       ...new Set(
         bookings
           .filter((b) => !getBookingRoomImage(b))
-          .map((b) => (b.roomId ?? b.roomResponse?.id ?? b.room?.id)?.toString())
-          .filter(Boolean)
+          .map((b) =>
+            (b.roomId ?? b.roomResponse?.id ?? b.room?.id)?.toString(),
+          )
+          .filter(Boolean),
       ),
     ];
     if (ids.length === 0) return;
@@ -142,7 +151,7 @@ export default function HistoryClient() {
         } catch {
           return { roomId, url: null as string | null };
         }
-      })
+      }),
     ).then((results) => {
       setRoomImageByRoomId((prev) => {
         const next = { ...prev };
@@ -215,19 +224,24 @@ export default function HistoryClient() {
           b.roomResponse?.roomType?.typeName ||
           b.room?.roomType?.typeName ||
           "Room";
-        const roomIdStr = (b.roomId ?? b.roomResponse?.id ?? b.room?.id)?.toString();
+        const roomIdStr = (
+          b.roomId ??
+          b.roomResponse?.id ??
+          b.room?.id
+        )?.toString();
         const roomImage =
-          getBookingRoomImage(b) || (roomIdStr ? roomImageByRoomId[roomIdStr] : null);
+          getBookingRoomImage(b) ||
+          (roomIdStr ? roomImageByRoomId[roomIdStr] : null);
         const confirmationCode = b.confirmationCode || `RN-${b.id}`;
 
         return (
           <article
             key={b.id}
-            className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
+            className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
           >
-            <div className="flex flex-col sm:flex-row">
-              {/* Image */}
-              <div className="relative w-full sm:w-80 h-52 sm:h-56 shrink-0 bg-slate-100 overflow-hidden">
+            <div className="flex items-center gap-4 p-4">
+              {/* Thumbnail (smaller) */}
+              <div className="relative w-30 h-30 shrink-0 rounded-xl overflow-hidden bg-slate-100">
                 {roomImage ? (
                   <img
                     src={roomImage}
@@ -236,128 +250,89 @@ export default function HistoryClient() {
                     loading="lazy"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300">
-                    <Bed className="w-12 h-12 mb-2" />
-                    <span className="text-xs font-medium text-slate-400">
-                      {roomName}
-                    </span>
+                  <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                    <Bed className="w-7 h-7" />
                   </div>
                 )}
-                <div className="absolute top-3 left-3">
+
+                {/* Status pill (small) */}
+                <div className="absolute top-2 left-2">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${statusConfig.className}`}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${statusConfig.className}`}
                   >
                     <StatusIcon className="w-3.5 h-3.5" />
-                    {statusConfig.label}
+                    {statusConfig.label.toLowerCase()}
                   </span>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 flex flex-col min-w-0 p-5 sm:p-6 lg:p-8">
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 font-[var(--font-heading)]">
+              {/* Main content */}
+              <div className="min-w-0 flex-1">
+                {/* Top row: name + price */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-slate-900 truncate">
                       {roomName}
                     </h3>
-                    <p className="text-slate-500 text-sm mt-0.5 flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <p className="text-sm text-slate-500 flex items-center gap-1 truncate">
+                      <MapPin className="w-4 h-4" />
                       Room #{b.roomResponse?.id ?? b.roomId ?? "—"}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-                      Confirmation
-                    </p>
-                    <p className="text-sm font-mono font-semibold text-slate-800">
-                      {confirmationCode}
+
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-semibold text-slate-900">
+                      ${Number(b.amount ?? 0).toLocaleString("en-US")}
                     </p>
                   </div>
                 </div>
 
-                {/* Dates & guests */}
-                <div className="grid grid-cols-1 xs:grid-cols-3 gap-4 py-4 border-y border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500">
-                      <Calendar className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-                        Check-in
-                      </p>
-                      <p className="text-sm font-medium text-slate-800">
-                        {formatDate(b.checkin)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500">
-                      <Calendar className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-                        Check-out
-                      </p>
-                      <p className="text-sm font-medium text-slate-800">
-                        {formatDate(b.checkout)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500">
-                      <Users className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-                        Guests
-                      </p>
-                      <p className="text-sm font-medium text-slate-800">
-                        {b.numOfAdults ?? 1} adult{b.numOfAdults !== 1 ? "s" : ""}
-                        {b.numOfChildren > 0
-                          ? `, ${b.numOfChildren} child${b.numOfChildren !== 1 ? "ren" : ""}`
-                          : ""}
-                      </p>
-                    </div>
-                  </div>
+                {/* Middle row: checkin/checkout/guests (compact) */}
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {formatDate(b.checkin)} - {formatDate(b.checkout)}
+                  </span>
+
+                  <span className="inline-flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {b.numOfAdults ?? 1} adult{b.numOfAdults !== 1 ? "s" : ""}
+                    {b.numOfChildren > 0
+                      ? `, ${b.numOfChildren} child${b.numOfChildren !== 1 ? "ren" : ""}`
+                      : ""}
+                  </span>
                 </div>
 
-                {/* Services */}
+                {/* Services (kept, but compact) */}
                 {b.bookingServices && b.bookingServices.length > 0 && (
-                  <div className="pt-4">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Add-ons
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {b.bookingServices.map((s: any) => (
+                  <div className="mt-2 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-slate-400 mt-0.5" />
+                    <div className="flex flex-wrap gap-1.5">
+                      {b.bookingServices.slice(0, 3).map((s: any) => (
                         <span
                           key={s.id}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100 text-xs text-slate-700"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[11px] text-slate-700"
                         >
                           {s.serviceResponse?.serviceName ?? "Service"} ×
                           {s.quantity ?? 1}
                         </span>
                       ))}
+                      {b.bookingServices.length > 3 && (
+                        <span className="text-[11px] text-slate-500">
+                          +{b.bookingServices.length - 3} more
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Total & CTA */}
-                <div className="mt-auto pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <p className="text-xs text-slate-500 font-medium mb-0.5">
-                      Total amount
-                    </p>
-                    <p className="text-2xl font-semibold text-slate-900 font-[var(--font-heading)]">
-                      ${Number(b.amount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                  </div>
+                {/* Bottom row: View Details (like screenshot) */}
+                <div className="mt-3 flex justify-end">
                   <Link
-                    href="/"
-                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-medium hover:bg-slate-700 transition-colors"
+                    href={`/booking/${b.id}`} // set this to your real details page
+                    className="inline-flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900"
                   >
-                    Browse rooms
-                    <ChevronRight className="w-4 h-4" />
+                    View Details <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
