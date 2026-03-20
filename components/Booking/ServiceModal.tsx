@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useCart } from "./CartContext";
 import type { Service } from "@/types/service";
 import { X, Minus, Plus } from "lucide-react";

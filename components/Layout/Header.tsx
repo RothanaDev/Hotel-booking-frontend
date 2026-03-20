@@ -77,7 +77,6 @@ export default function Header() {
     setIsAuthenticated(isLoggedIn);
     const email = localStorage.getItem('currentUser');
     if (email) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentUserEmail(email);
       if (email.includes('@')) {
         const namePart = email.split('@')[0];
