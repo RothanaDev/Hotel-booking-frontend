@@ -1,12 +1,42 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import CartDrawer from '@/components/Booking/CartDrawer';
 import { useCart } from '@/components/Booking/CartContext';
 import { logout as apiLogout, isAuthenticated as checkAuth } from '@/lib/auth';
+
+function CartButton({ pathname, router }: { pathname: string; router: ReturnType<typeof useRouter> }) {
+  const { count } = useCart();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  const isCartActive = pathname === '/booking/checkout';
+
+  return (
+    <button
+      onClick={() => router.push('/booking/checkout')}
+      className={`relative w-11 h-11 flex items-center justify-center rounded-full transition-all duration-300 shadow-lg ${isCartActive
+        ? 'bg-blue-500 text-white shadow-blue-500/30'
+        : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-500/30 hover:scale-110'
+        }`}
+      aria-label="View Cart"
+    >
+      <ShoppingCart size={20} strokeWidth={2.5} />
+      {mounted && count > 0 && (
+        <span className="absolute -top-1 -right-1 text-[10px] font-black w-5 h-5 bg-white text-red-600 rounded-full flex items-center justify-center shadow-sm border-2 border-transparent group-hover:scale-110 transition-transform">
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,9 +73,11 @@ export default function Header() {
 
   useEffect(() => {
     const isLoggedIn = checkAuth();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthenticated(isLoggedIn);
     const email = localStorage.getItem('currentUser');
     if (email) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentUserEmail(email);
       if (email.includes('@')) {
         const namePart = email.split('@')[0];
@@ -81,41 +113,6 @@ export default function Header() {
     ? [...baseLinks, { href: '/booking', label: 'My Bookings' }]
     : baseLinks;
 
-  function CartButton() {
-    try {
-      const { count } = useCart();
-      const [mounted, setMounted] = useState(false);
-      useEffect(() => {
-        setMounted(true);
-      }, []);
-
-      const isCartActive = pathname === '/booking/checkout';
-
-      return (
-        <button
-          onClick={() => router.push('/booking/checkout')}
-          className={`relative w-11 h-11 flex items-center justify-center rounded-full transition-all duration-300 shadow-lg ${isCartActive
-            ? 'bg-blue-500 text-white shadow-blue-500/30'
-            : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-500/30 hover:scale-110'
-            }`}
-          aria-label="View Cart"
-        >
-          <ShoppingCart size={20} strokeWidth={2.5} />
-          {mounted && count > 0 && (
-            <span className="absolute -top-1 -right-1 text-[10px] font-black w-5 h-5 bg-white text-red-600 rounded-full flex items-center justify-center shadow-sm border-2 border-transparent group-hover:scale-110 transition-transform">
-              {count}
-            </span>
-          )}
-        </button>
-      );
-    } catch (e) {
-      return (
-        <button onClick={() => router.push('/booking/checkout')} className="p-2 rounded-full hover:bg-gray-100">
-          <ShoppingCart size={18} />
-        </button>
-      );
-    }
-  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm transition-all duration-300">
@@ -124,10 +121,11 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group outline-none">
             <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110">
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="RNHotel Logo"
-                className="object-contain w-full h-full"
+                fill
+                className="object-contain"
               />
             </div>
             <span className="text-2xl font-bold tracking-tight">
@@ -156,7 +154,7 @@ export default function Header() {
 
           {/* Cart + Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4 relative">
-            <CartButton />
+            <CartButton pathname={pathname} router={router} />
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -219,14 +217,18 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-amber-500 transition-colors"
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Right Actions */}
+          <div className="flex md:hidden items-center space-x-3">
+            <CartButton pathname={pathname} router={router} />
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-gray-700 hover:text-blue-600 transition-all rounded-full hover:bg-gray-100"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}

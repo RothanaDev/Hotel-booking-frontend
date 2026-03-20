@@ -26,10 +26,11 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://hotel-booking-backend-uder.onrender.com";
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8080/api/:path*',
+        destination: `${apiBaseUrl}/api/:path*`,
       },
     ];
   },

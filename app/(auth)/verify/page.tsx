@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyEmail, resendVerification } from '@/lib/api';
-import { Input } from '@/components/ui/input';
+// import { Input } from '@/components/ui/input'; // Input is defined but never used
 import { CheckCircle, X, ShieldCheck, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -68,8 +68,14 @@ function VerifyContent() {
             setTimeout(() => {
                 router.push('/login');
             }, 2000);
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Verification failed. Please check the code.';
+        } catch (err: unknown) {
+            let message = 'Verification failed. Please check the code.';
+            if (err && typeof err === 'object') {
+                type ErrorData = { message?: string };
+                const errorObj = err as { response?: { data?: unknown }; message?: string };
+                const data = errorObj.response?.data as ErrorData | undefined;
+                message = data?.message || errorObj.message || message;
+            }
             setError(message);
         } finally {
             setIsLoading(false);
@@ -86,7 +92,7 @@ function VerifyContent() {
             await resendVerification({ email });
             setCountdown(60);
             // Optional: show a mini toast for resend success
-        } catch (err: any) {
+        } catch {
             setError('Failed to resend code. Please try again.');
         } finally {
             setIsResending(false);
@@ -126,7 +132,7 @@ function VerifyContent() {
 
                     <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Verify Your Email</h1>
                     <p className="text-sm text-gray-500 mb-8">
-                        We've sent a 6-digit verification code to <br />
+                        We&apos;ve sent a 6-digit verification code to <br />
                         <span className="font-bold text-slate-800">{email}</span>
                     </p>
 
@@ -172,7 +178,7 @@ function VerifyContent() {
 
                     <div className="mt-8 space-y-4">
                         <p className="text-sm text-gray-500">
-                            Didn't receive the code?{' '}
+                            Didn&apos;t receive the code?{' '}
                             {countdown > 0 ? (
                                 <span className="text-blue-600 font-bold">Resend in {countdown}s</span>
                             ) : (

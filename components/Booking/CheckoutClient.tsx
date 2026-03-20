@@ -9,7 +9,6 @@ import { isAuthenticated as checkAuth } from "@/lib/auth";
 import { Stepper, type StepKey } from "@/components/Booking/Stepper";
 import {
   Trash2,
-  Calendar,
   Users,
   Sparkles,
   CreditCard,
@@ -105,7 +104,7 @@ export default function CheckoutClient() {
               numOfAdults: r.numOfAdults || 1,
               numOfChildren: r.numOfChildren || 0,
               services: [...roomServices, ...standaloneServices],
-            };
+            } as unknown as Parameters<typeof createBooking>[0];
 
             return await createBooking(payload);
           }),
@@ -139,7 +138,7 @@ export default function CheckoutClient() {
       }
 
       window.location.href = approvalUrl;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("PayPal checkout error", err);
       alert("Checkout failed. Please try again.");
       setCurrentStep("checkout");
@@ -247,8 +246,8 @@ export default function CheckoutClient() {
                     const n = nights(item.checkin, item.checkout);
                     const imgSrc =
                       item.image ||
-                      (item as any).photo ||
-                      (item as any).roomPhotoUrl;
+                      (item as unknown as Record<string, unknown>).photo as string ||
+                      (item as unknown as Record<string, unknown>).roomPhotoUrl as string;
 
                     return (
                       <div

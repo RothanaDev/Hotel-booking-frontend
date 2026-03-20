@@ -69,11 +69,10 @@ export default function RoomSection() {
     const [loading, setLoading] = useState(true);
     const { data: services = [] } = useAllServices();
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedRoom, setSelectedRoom] = useState<any | null>(null);
+    const [selectedRoom, setSelectedRoom] = useState<{ id: number; price: number; title?: string; image?: string } | null>(null);
     const allRoomsRef = useRef<Room[]>([]);
     const [keyword, setKeyword] = useState("");
     const [type, setType] = useState("all");
-    const [price, setPrice] = useState("any");
     const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
     const router = useRouter();
 
@@ -117,16 +116,16 @@ export default function RoomSection() {
             );
         }
         setFilteredRooms(result);
-    }, [keyword, type, price]);
+    }, [keyword, type]);
 
     const openBookingModal = (room: Room) => {
         if (!isAuthenticated()) {
             router.push("/register");
             return;
         }
-        const roomImage = (room as any).image || (room as any).photo || (room as any).roomPhotoUrl;
+        const roomImage = (room as unknown as Record<string, unknown>).image as string || (room as unknown as Record<string, unknown>).photo as string || (room as unknown as Record<string, unknown>).roomPhotoUrl as string;
         setSelectedRoom({
-            id: room.id,
+            id: Number(room.id),
             price: getRoomTypePrice(room.roomType),
             title: getRoomTypeName(room.roomType),
             image: roomImage,
@@ -160,8 +159,6 @@ export default function RoomSection() {
                         setKeyword={setKeyword}
                         type={type}
                         setType={setType}
-                        price={price}
-                        setPrice={setPrice}
                     />
                 </div>
 
@@ -205,6 +202,7 @@ export default function RoomSection() {
                 </AnimatePresence>
 
                 <BookingModal
+                    key={selectedRoom?.id || 'none'}
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
                     room={selectedRoom}

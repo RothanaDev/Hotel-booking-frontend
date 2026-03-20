@@ -9,9 +9,9 @@ interface RoomCardProps {
     room: Room;
     idx: number;
     onBook: (room: Room) => void;
-    getRoomTypeName: (roomType: any) => string;
-    getRoomTypeDescription: (roomType: any) => string;
-    getRoomTypePrice: (roomType: any) => number;
+    getRoomTypeName: (roomType: Room['roomType']) => string;
+    getRoomTypeDescription: (roomType: Room['roomType']) => string;
+    getRoomTypePrice: (roomType: Room['roomType']) => number;
 }
 
 export default function RoomCard({
@@ -22,7 +22,7 @@ export default function RoomCard({
     getRoomTypeDescription,
     getRoomTypePrice,
 }: RoomCardProps) {
-    const img = (room as any).image;
+    const img = (room as Room & { image?: string }).image;
 
     return (
         <motion.div

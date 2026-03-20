@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## RN Hotel Booking Frontend
 
-## Getting Started
+This project is a modern hotel booking web application built with Next.js 16, TypeScript, and Tailwind CSS. It provides a seamless experience for users to browse rooms, manage bookings, and handle payments securely. The frontend is designed for performance, accessibility, and scalability, following best practices from the Next.js ecosystem.
 
-First, run the development server:
+### Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **User Authentication:** Secure registration, login, and email verification flows.
+- **Room Browsing:** Search, filter, and view detailed information about available rooms.
+- **Booking Management:** Add rooms and services to a cart, review booking history, and manage reservations.
+- **Service Add-ons:** Select extra services to enhance the stay experience.
+- **Checkout & Payments:** Streamlined checkout process with PayPal integration for secure payments.
+- **Responsive UI:** Fully responsive and accessible design for all devices.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js 16 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- Axios
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Getting Started
 
-## Learn More
+1. Install dependencies:
+	```bash
+	npm install
+	```
+2. Start the development server:
+	```bash
+	npm run dev
+	```
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+### Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/` — Main application pages and routing
+- `components/` — Reusable UI and feature components
+- `lib/` — API utilities, authentication, and helpers
+- `types/` — TypeScript type definitions
+- `public/` — Static assets and images
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Deployment
 
-## Deploy on Vercel
+Deploy easily to Vercel or your preferred platform. For production, ensure environment variables are set in `.env.local` (see example in the repo). For more details, refer to the Next.js [deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For questions, feedback, or contributions, please open an issue or pull request.

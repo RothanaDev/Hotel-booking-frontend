@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { Tv, Wifi, Wind, X, Minus, Plus } from "lucide-react";
 import { useCart } from "./CartContext";
 
@@ -19,7 +19,7 @@ export default function BookingModal({
   open: boolean;
   onClose: () => void;
   room: RoomSummary | null;
-  services?: any[]; // keep prop compatibility (not used here)
+  services?: unknown[]; // keep prop compatibility
 }) {
   const [checkin, setCheckin] = useState("");
   const [checkout, setCheckout] = useState("");
@@ -29,16 +29,6 @@ export default function BookingModal({
 
   const { addRoom } = useCart();
 
-  // reset when open/room changes (so it feels clean)
-  useEffect(() => {
-    if (open) {
-      setCheckin("");
-      setCheckout("");
-      setAdults(1);
-      setChildren(0);
-      setIsLoading(false);
-    }
-  }, [open, room?.id]);
 
   const nights = useMemo(() => {
     if (!checkin || !checkout) return 0;
@@ -87,14 +77,17 @@ export default function BookingModal({
   if (!open || !room) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[100] flex flex-col sm:items-center sm:justify-center">
       {/* backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-[2px] hidden sm:block"
+        onClick={onClose}
+      />
 
       {/* modal */}
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border overflow-hidden">
+      <div className="relative w-full h-full sm:h-auto sm:max-w-lg bg-white sm:rounded-2xl shadow-2xl border flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* header */}
-        <div className="px-5 py-4 flex items-start justify-between border-b bg-slate-50">
+        <div className="px-5 py-4 flex items-start justify-between border-b bg-slate-50 flex-shrink-0">
           <div className="min-w-0">
             <h3 className="text-lg font-black text-slate-900 truncate">
               Book {room.title || "Room"}
@@ -119,17 +112,17 @@ export default function BookingModal({
 
           <button
             onClick={onClose}
-            className="h-9 w-9 grid place-items-center rounded-full hover:bg-slate-200 text-slate-600"
+            className="h-9 w-9 grid place-items-center rounded-full hover:bg-slate-200 text-slate-600 transition-colors"
             aria-label="Close"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* content */}
-        <div className="p-5">
+        {/* content - scrollable */}
+        <div className="p-5 flex-1 overflow-y-auto">
           {/* dates */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
                 Check-in
@@ -163,15 +156,15 @@ export default function BookingModal({
           </div>
 
           {/* guests */}
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <div className="rounded-xl border p-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div className="rounded-xl border p-3 bg-white">
               <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
                 Adults
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <button
                   onClick={decAdults}
-                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center"
+                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center transition-colors"
                   aria-label="Decrease adults"
                 >
                   <Minus size={16} />
@@ -179,7 +172,7 @@ export default function BookingModal({
                 <span className="text-base font-black text-slate-900">{adults}</span>
                 <button
                   onClick={incAdults}
-                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center"
+                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center transition-colors"
                   aria-label="Increase adults"
                 >
                   <Plus size={16} />
@@ -187,14 +180,14 @@ export default function BookingModal({
               </div>
             </div>
 
-            <div className="rounded-xl border p-3">
+            <div className="rounded-xl border p-3 bg-white">
               <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
                 Children
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <button
                   onClick={decKids}
-                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center"
+                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center transition-colors"
                   aria-label="Decrease children"
                 >
                   <Minus size={16} />
@@ -202,7 +195,7 @@ export default function BookingModal({
                 <span className="text-base font-black text-slate-900">{children}</span>
                 <button
                   onClick={incKids}
-                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center"
+                  className="h-9 w-9 rounded-lg border hover:bg-slate-50 grid place-items-center transition-colors"
                   aria-label="Increase children"
                 >
                   <Plus size={16} />
@@ -212,7 +205,7 @@ export default function BookingModal({
           </div>
 
           {/* summary */}
-          <div className="mt-4 rounded-xl border bg-slate-50 p-3 flex items-center justify-between">
+          <div className="mt-4 rounded-xl border bg-slate-50 p-4 flex items-center justify-between">
             <div>
               <p className="text-lg text-slate-900 font-black">
                 Total
@@ -220,35 +213,34 @@ export default function BookingModal({
             </div>
 
             <div className="text-right">
-              <p className="text-lg font-black text-green-500">
+              <p className="text-xl font-black text-green-600">
                 {nights > 0 ? `$${total.toFixed(2)}` : "$0.00"}
               </p>
             </div>
           </div>
+        </div>
 
-          {/* actions */}
-          <div className="mt-5 flex items-center justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="h-11 px-4 rounded-xl font-bold text-slate-600 hover:text-slate-900"
-            >
-              Cancel
-            </button>
+        {/* footer/actions */}
+        <div className="p-5 border-t bg-slate-50 flex items-center justify-end gap-3 flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="h-11 px-6 rounded-xl font-bold text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            Cancel
+          </button>
 
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className={[
-                "h-11 px-5 rounded-xl font-black text-white",
-                "bg-blue-500 hover:bg-blue-600",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-              ].join(" ")}
-            >
-              {isLoading ? "Adding..." : "Add to Cart"}
-            </button>
-          </div>
-
-
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className={[
+              "h-11 px-8 rounded-xl font-black text-white shadow-lg",
+              "bg-blue-600 hover:bg-blue-700",
+              "transition-all active:scale-95",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100",
+            ].join(" ")}
+          >
+            {isLoading ? "Adding..." : "Add to Cart"}
+          </button>
         </div>
       </div>
     </div>

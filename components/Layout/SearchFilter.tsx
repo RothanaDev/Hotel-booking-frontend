@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,8 +17,6 @@ interface RoomFiltersProps {
   setKeyword: (value: string) => void;
   type: string;
   setType: (value: string) => void;
-  price: string;
-  setPrice: (value: string) => void;
 }
 
 export default function RoomFilters({
@@ -27,8 +24,6 @@ export default function RoomFilters({
   setKeyword,
   type,
   setType,
-  price,
-  setPrice,
 }: RoomFiltersProps) {
   return (
     <Card className="border border-slate-200 bg-white shadow-sm">

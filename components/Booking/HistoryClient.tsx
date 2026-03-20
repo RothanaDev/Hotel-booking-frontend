@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { getUserBookings, getRoomById } from "@/lib/api";
 import Link from "next/link";
 import {
@@ -27,6 +28,7 @@ function resolveImageUrl(raw: string | undefined): string | null {
     : `${IMAGE_BASE}/${trimmed}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getBookingRoomImage(b: any): string | null {
   const room = b.roomResponse ?? b.room;
   const roomType = room?.roomType;
@@ -48,6 +50,7 @@ function getBookingRoomImage(b: any): string | null {
   return null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getRoomImageFromRoom(room: any): string | null {
   if (!room) return null;
   const roomType = room?.roomType;
@@ -103,6 +106,7 @@ function getStatusConfig(status: string) {
 }
 
 export default function HistoryClient() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [roomImageByRoomId, setRoomImageByRoomId] = useState<
@@ -110,22 +114,25 @@ export default function HistoryClient() {
   >({});
 
   useEffect(() => {
-    const userId = Number(
-      localStorage.getItem("userId") || localStorage.getItem("user_id") || 0,
-    );
-    if (!userId) {
-      setBookings([]);
-      setLoading(false);
-      return;
-    }
-    getUserBookings(userId.toString())
-      .then((data) => {
+    const fetchBookings = async () => {
+      const userId = localStorage.getItem("userId") || localStorage.getItem("user_id");
+      if (!userId) {
+        setBookings([]);
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = await getUserBookings(userId);
         setBookings(
           Array.isArray(data) ? data : (data?.bookings ?? data ?? []),
         );
-      })
-      .catch(() => setBookings([]))
-      .finally(() => setLoading(false));
+      } catch {
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
   }, []);
 
   // When bookings have no image from API, fetch room by roomId to get image
@@ -232,7 +239,7 @@ export default function HistoryClient() {
         const roomImage =
           getBookingRoomImage(b) ||
           (roomIdStr ? roomImageByRoomId[roomIdStr] : null);
-        const confirmationCode = b.confirmationCode || `RN-${b.id}`;
+        // const confirmationCode = b.confirmationCode || `RN-${b.id}`; // unused
 
         return (
           <article
@@ -243,11 +250,12 @@ export default function HistoryClient() {
               {/* Thumbnail (smaller) */}
               <div className="relative w-30 h-30 shrink-0 rounded-xl overflow-hidden bg-slate-100">
                 {roomImage ? (
-                  <img
+                  <Image
                     src={roomImage}
                     alt={roomName}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-slate-300">
@@ -308,7 +316,7 @@ export default function HistoryClient() {
                   <div className="mt-2 flex items-start gap-2">
                     <Sparkles className="w-4 h-4 text-slate-400 mt-0.5" />
                     <div className="flex flex-wrap gap-1.5">
-                      {b.bookingServices.slice(0, 3).map((s: any) => (
+                      {b.bookingServices.slice(0, 3).map((s: { id: React.Key; serviceResponse?: { serviceName?: string }; quantity?: number }) => (
                         <span
                           key={s.id}
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[11px] text-slate-700"

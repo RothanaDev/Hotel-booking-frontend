@@ -48,7 +48,7 @@ export default function About() {
                 <p>
                   Founded in 1920, GrandLuxe Hotel has been a beacon of luxury and sophistication for over a
                   century. What began as a vision to create an unparalleled hospitality experience has evolved
-                  into one of the world's most prestigious hotel brands.
+                  into one of the world&apos;s most prestigious hotel brands.
                 </p>
                 <p>
                   Our commitment to excellence is reflected in every detail — from our meticulously designed

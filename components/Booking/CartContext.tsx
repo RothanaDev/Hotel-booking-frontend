@@ -63,32 +63,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    try {
-      const keySuffix = userId ? `_${userId}` : "_guest";
+    const loadCart = () => {
+      try {
+        const keySuffix = userId ? `_${userId}` : "_guest";
+        const savedRooms = localStorage.getItem(`cart_rooms${keySuffix}`);
+        const savedServices = localStorage.getItem(`cart_services${keySuffix}`);
 
-      const savedRooms = localStorage.getItem(`cart_rooms${keySuffix}`);
-      const savedServices = localStorage.getItem(`cart_services${keySuffix}`);
+        if (savedRooms) setRooms(JSON.parse(savedRooms));
 
-      if (savedRooms) setRooms(JSON.parse(savedRooms));
-
-      if (savedServices) {
-        const parsed = JSON.parse(savedServices) as CartServiceItem[];
-
-        // ✅ migrate: remove placeholder if stored earlier
-        const migrated = parsed.map((s) => ({
-          ...s,
-          quantity: Number(s.quantity || 1),
-          image:
-            s.image === "/images/placeholder.png" ? undefined : s.image, // ✅ kill placeholder
-        }));
-
-        setServices(migrated);
+        if (savedServices) {
+          const parsed = JSON.parse(savedServices) as CartServiceItem[];
+          const migrated = parsed.map((s) => ({
+            ...s,
+            quantity: Number(s.quantity || 1),
+            image: s.image === "/images/placeholder.png" ? undefined : s.image,
+          }));
+          setServices(migrated);
+        }
+      } catch (e) {
+        console.error("Cart load error", e);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (e) {
-      console.error("Cart load error", e);
-    }
+    };
 
-    setIsLoaded(true);
+    setTimeout(loadCart, 0);
   }, [userId]);
 
   // ✅ Save rooms

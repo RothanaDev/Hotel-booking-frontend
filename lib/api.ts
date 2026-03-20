@@ -1,9 +1,9 @@
 import axios from "axios";
-import type { AuthUser, SendVerificationRequest, VerificationRequest } from "@/types/auth";
+import type { SendVerificationRequest, VerificationRequest } from "@/types/auth";
 import type { Room } from "@/types/room";
 import { isAuthenticated, logout, AUTH_KEYS } from "./auth";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://hotel-booking-backend-uder.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -62,7 +62,7 @@ api.interceptors.response.use(
         isRefreshing = false;
         onTokenRefreshed(true);
         return api(originalRequest);
-      } catch (refreshError: any) {
+      } catch (refreshError: unknown) {
         isRefreshing = false;
         onTokenRefreshed(false);
         if (isAuthenticated()) {
@@ -96,7 +96,7 @@ export async function loginUser(loginDetails: { email: string; password: string 
 
     if (response.status >= 400) {
       const error = new Error(response.data?.message || response.data?.error?.reason || "Authentication failed");
-      (error as any).response = response;
+        (error as Error & { response?: typeof response }).response = response;
       throw error;
     }
 
@@ -109,12 +109,17 @@ export async function loginUser(loginDetails: { email: string; password: string 
     if (id) localStorage.setItem(AUTH_KEYS.USER_ID, id.toString());
 
     return { ...userData, id };
-  } catch (error: any) {
+  } catch (error: unknown) {
     throw error;
   }
 }
 
-export async function registerUser(registrationDetails: any) {
+export interface RegistrationDetails {
+  email: string;
+  password: string;
+  [key: string]: unknown;
+}
+export async function registerUser(registrationDetails: RegistrationDetails) {
   const { data } = await api.post("/api/v1/auth/register", registrationDetails);
   return data;
 }
@@ -148,7 +153,7 @@ export async function getAllRoomTypes() {
   try {
     const { data } = await api.get("/api/v1/roomTypes");
     return data;
-  } catch (error: any) {
+  } catch {
     return [];
   }
 }
@@ -156,7 +161,8 @@ export async function getAllRoomTypes() {
 /* =======================
    BOOKINGS
 ======================= */
-export async function createBooking(booking: any) {
+import type { Booking } from "@/types/booking";
+export async function createBooking(booking: Booking) {
   const { data } = await api.post("/api/v1/bookings/create", booking);
   return data;
 }
@@ -173,7 +179,7 @@ export async function getAllServices() {
   try {
     const { data } = await api.get("/api/v1/services");
     return data;
-  } catch (error) {
+  } catch {
     return [];
   }
 }

@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAllServices } from "@/hooks/use-queries";
 import type { Service } from "@/types/service";
-import { Sparkles, Search } from "lucide-react";
+import { Sparkles } from "lucide-react";
+// import { Search } from "lucide-react"; // Search is defined but never used
 import { isAuthenticated } from "@/lib/auth";
 import ServiceModal from '@/components/Booking/ServiceModal';
-import { useCart } from '@/components/Booking/CartContext';
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+// import { useCart } from '@/components/Booking/CartContext';
+// import { Input } from "@/components/ui/input"; // Input is defined but never used
+// import { Card, CardContent } from "@/components/ui/card"; // Card, CardContent are defined but never used
 import { motion, AnimatePresence } from "framer-motion";
+/* 
 import {
   Select,
   SelectContent,
@@ -19,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+*/
 
 function ServiceSkeletonGrid() {
   return (
@@ -55,19 +58,15 @@ function ServiceSkeletonGrid() {
 }
 
 export default function ServicesPage() {
-  const [authRequired, setAuthRequired] = useState(false);
   const router = useRouter();
 
   // Filter states
-  const [keyword, setKeyword] = useState("");
-  const [category, setCategory] = useState("all");
+  const [keyword] = useState("");
+  const [category] = useState("all");
 
   // Use react-query hook for services
   const { data: services = [], isLoading, error } = useAllServices();
-
-  useEffect(() => {
-    setAuthRequired(!!(error as any)?.isUnauthorized);
-  }, [error]);
+  const authRequired = !!(error as { isUnauthorized?: boolean })?.isUnauthorized;
 
   const loading = !!isLoading;
 
@@ -92,7 +91,7 @@ export default function ServicesPage() {
   }, [services, keyword, category]);
 
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<any | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   return (
     <div className="flex flex-col w-full">
@@ -159,7 +158,7 @@ export default function ServicesPage() {
                 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
               >
-                {filteredServices.map((service, idx) => (
+                {filteredServices.map((service) => (
                   <motion.div
                     key={service.id}
                     variants={{
@@ -225,7 +224,12 @@ export default function ServicesPage() {
               </motion.div>
             )}
           </AnimatePresence>
-          <ServiceModal open={serviceModalOpen} onClose={() => setServiceModalOpen(false)} service={selectedService} />
+          <ServiceModal
+            key={selectedService?.id || 'none'}
+            open={serviceModalOpen}
+            onClose={() => setServiceModalOpen(false)}
+            service={selectedService}
+          />
         </div>
       </section>
     </div>

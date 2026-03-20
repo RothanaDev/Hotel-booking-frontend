@@ -5,7 +5,8 @@ import { capturePaypalOrder } from "@/lib/api";
 import { useCart } from "@/components/Booking/CartContext";
 import { useRouter } from "next/navigation";
 import { Stepper } from "@/components/Booking/Stepper";
-import { CheckCircle2, ArrowRight, ShieldCheck, Calendar, Sparkles } from "lucide-react";
+import { CheckCircle2, ArrowRight, ShieldCheck } from "lucide-react";
+// import { Calendar, Sparkles } from "lucide-react"; // Calendar, Sparkles are defined but never used
 
 export default function PayPalSuccessPage() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -14,33 +15,35 @@ export default function PayPalSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get("token");
+    const fetchOrder = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("token");
 
-    if (!orderId) {
-      setMsg("Missing transaction token.");
-      setStatus("error");
-      return;
-    }
+      if (!orderId) {
+        setMsg("Missing transaction token.");
+        setStatus("error");
+        return;
+      }
 
-    capturePaypalOrder(orderId)
-      .then((res) => {
-        if (res.status === "COMPLETED") {
+      try {
+        const res = await capturePaypalOrder(orderId);
+        if (res.status === 'COMPLETED') {
           clear();
           setStatus("success");
           setMsg("Your stay has been confirmed!");
-          // Optional: clear any temp state
         } else {
           setStatus("error");
           setMsg(`Transaction status: ${res.status}`);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         setStatus("error");
         setMsg("We couldn't verify your payment. Please contact support.");
-      });
-  }, []);
+      }
+    };
+
+    fetchOrder();
+  }, [clear]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-white">

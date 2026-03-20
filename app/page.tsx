@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Star, MapPin, Navigation, Calendar, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import RoomSection from "@/components/Room/RoomSection";
 
 const toISODate = (d: Date) => d.toISOString().split("T")[0];
@@ -13,8 +13,8 @@ const toISODate = (d: Date) => d.toISOString().split("T")[0];
 export default function Home() {
   const router = useRouter();
 
-  const today = useMemo(() => new Date(), []);
-  const tomorrow = useMemo(() => new Date(Date.now() + 86400000), []);
+  const [today] = useState(() => new Date());
+  const [tomorrow] = useState(() => new Date(new Date().getTime() + 86400000));
 
   const [checkIn, setCheckIn] = useState(toISODate(today));
   const [checkOut, setCheckOut] = useState(toISODate(tomorrow));
@@ -63,22 +63,21 @@ export default function Home() {
             </p>
           </motion.div>
 
-          {/* Search Bar */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-4xl mx-auto"
           >
-            <div className="bg-white/10 backdrop-blur-sm p-2 rounded-2xl md:rounded-full border border-white/20 shadow-2xl flex flex-col md:flex-row items-center gap-2">
-              <div className="flex-1 flex w-full">
+            <div className="bg-white/10 backdrop-blur-md p-3 rounded-3xl md:rounded-full border border-white/20 shadow-2xl flex flex-col md:flex-row items-stretch md:items-center gap-3">
+              <div className="flex-1 flex flex-col sm:flex-row items-stretch">
                 {/* Check-in */}
-                <div className="flex-1 flex items-center px-6 py-3 border-r border-white/10 hover:bg-white/5 transition-colors group">
-                  <div className="text-blue-400 mr-4 group-hover:scale-110 transition-transform">
+                <div className="flex-1 flex items-center px-6 py-4 border-b border-white/10 sm:border-b-0 sm:border-r sm:border-white/10 hover:bg-white/5 transition-colors group">
+                  <div className="text-blue-400 mr-4 group-hover:scale-110 transition-transform flex-shrink-0">
                     <Calendar className="w-6 h-6" />
                   </div>
-                  <div className="text-left w-full">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <div className="text-left w-full min-w-0">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">
                       Check-in
                     </p>
                     <input
@@ -96,18 +95,18 @@ export default function Home() {
                           setCheckOut(toISODate(d));
                         }
                       }}
-                      className="bg-transparent border-none outline-none text-white text-sm font-semibold w-full [color-scheme:dark]"
+                      className="bg-transparent border-none outline-none text-white text-sm font-bold w-full [color-scheme:dark] cursor-pointer"
                     />
                   </div>
                 </div>
 
                 {/* Check-out */}
-                <div className="flex-1 flex items-center px-6 py-3 hover:bg-white/5 transition-colors group cursor-pointer rounded-r-2xl md:rounded-r-none">
-                  <div className="text-blue-400 mr-4 group-hover:scale-110 transition-transform">
+                <div className="flex-1 flex items-center px-6 py-4 hover:bg-white/5 transition-colors group cursor-pointer border-b border-white/10 sm:border-b-0">
+                  <div className="text-blue-400 mr-4 group-hover:scale-110 transition-transform flex-shrink-0">
                     <Calendar className="w-6 h-6" />
                   </div>
-                  <div className="text-left w-full">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <div className="text-left w-full min-w-0">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">
                       Check-out
                     </p>
                     <input
@@ -115,7 +114,7 @@ export default function Home() {
                       value={checkOut}
                       min={checkIn}
                       onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-transparent border-none outline-none text-white text-sm font-semibold w-full [color-scheme:dark]"
+                      className="bg-transparent border-none outline-none text-white text-sm font-bold w-full [color-scheme:dark] cursor-pointer"
                     />
                   </div>
                 </div>
@@ -124,10 +123,10 @@ export default function Home() {
               {/* Search Button */}
               <button
                 onClick={onSearch}
-                className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white px-10 py-5 rounded-xl md:rounded-full font-bold flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] active:scale-95 group"
+                className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl md:rounded-full font-black flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 group flex-shrink-0"
               >
                 <Search className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                <span>Search Rooms</span>
+                <span>Search</span>
               </button>
             </div>
           </motion.div>

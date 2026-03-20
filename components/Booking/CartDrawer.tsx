@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { useCart } from './CartContext';
-import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { rooms, services, removeRoom, removeService, clear, count } = useCart();
+  const { rooms, services, removeRoom, removeService, clear } = useCart();
   const router = useRouter();
 
   if (!open) return null;
@@ -47,9 +47,15 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
                 {rooms.map((r) => (
                   <div key={r.id} className="flex items-center gap-3 p-3 rounded-md border bg-gray-50">
                     <div className="w-24 h-16 bg-gray-200 rounded-md flex-shrink-0 overflow-hidden">
-                      {/* optional image if provided */}
-                      {/** @ts-ignore */}
-                      {r.image ? <img src={r.image} alt={r.title} className="w-full h-full object-cover" /> : null}
+                      {r.image ? (
+                        <Image
+                          src={r.image}
+                          alt={r.title || "Room"}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : null}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">

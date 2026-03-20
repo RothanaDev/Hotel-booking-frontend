@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { registerUser, sendVerification } from '@/lib/api';
 import { registerSchema } from '@/lib/validator/register';
 import { Input } from '@/components/ui/input';
 import { User, Phone, Mail, Lock, Eye, EyeOff, CheckCircle, X } from 'lucide-react';
-import { z } from 'zod';
+// import { z } from 'zod'; // z is defined but never used
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -72,10 +73,16 @@ export default function RegisterPage() {
       setTimeout(() => {
         router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
       }, 1200);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error', err);
-      const serverMessage = err.response?.data?.message || err.response?.data?.error;
-      const message = serverMessage || err.message || 'Registration failed. Please try again.';
+      let message = 'Registration failed. Please try again.';
+      if (err && typeof err === 'object') {
+        type ErrorData = { message?: string; error?: string };
+        const errorObj = err as { response?: { data?: unknown }; message?: string };
+        const data = errorObj.response?.data as ErrorData | undefined;
+        const serverMessage = data?.message || data?.error;
+        message = serverMessage || errorObj.message || message;
+      }
       setError(message);
     } finally {
       setIsLoading(false);
@@ -114,8 +121,8 @@ export default function RegisterPage() {
           <div className="flex flex-col items-center">
             {/* smaller logo */}
             <div className="mb-3">
-              <div className="w-16 h-16 rounded-xl bg-white p-2 flex items-center justify-center shadow-[0_8px_30px_rgba(99,102,241,0.12)]">
-                <img src="/images/logo.png" alt="RN HOTEL" className="object-contain w-full h-full" />
+              <div className="w-16 h-16 rounded-xl bg-white p-2 flex items-center justify-center shadow-[0_8px_30px_rgba(99,102,241,0.12)] relative">
+                <Image src="/images/logo.png" alt="RN HOTEL" fill className="object-contain" />
               </div>
             </div>
 

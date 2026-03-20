@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from 'next/link';
-import { useRouter } from "next/navigation";
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Lock, AlertCircle, CheckCircle, Eye, EyeOff, X } from "lucide-react";
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [isUnverified, setIsUnverified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const router = useRouter();
+  // const router = useRouter(); // router is defined but never used
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,18 +45,20 @@ export default function LoginPage() {
       setTimeout(() => {
         window.location.href = "/";
       }, 1200);
-    } catch (err: any) {
-      console.warn('Login attempt failed:', err.message);
-      const data = err.response?.data;
-      const message = data?.message || data?.error?.reason || data?.error || err.message || 'Invalid email or password';
-
-      if (message.toLowerCase().includes("not verified") || message.toLowerCase().includes("unverified")) {
-        setIsUnverified(true);
-        setError("Your email is not verified yet.");
-      } else {
-        setIsUnverified(false);
-        setError(message);
+    } catch (err: unknown) {
+      let message = 'Invalid email or password';
+      let isUnverifiedError = false;
+      if (err && typeof err === 'object') {
+        type ErrorData = { message?: string; error?: { reason?: string } | string };
+        const errorObj = err as { response?: { data?: ErrorData }; message?: string };
+        const data = errorObj.response?.data;
+        message = data?.message || (typeof data?.error === 'object' ? data?.error?.reason : data?.error) || errorObj.message || message;
+        if (typeof message === 'string' && (message.toLowerCase().includes('not verified') || message.toLowerCase().includes('unverified'))) {
+          isUnverifiedError = true;
+        }
       }
+      setIsUnverified(isUnverifiedError);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ export default function LoginPage() {
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative h-20 w-20 rounded-2xl bg-white p-2 flex items-center justify-center shadow-inner overflow-hidden border border-gray-100">
-                <img src="/images/logo.png" alt="RN HOTEL Logo" className="w-full h-full object-contain" />
+                <Image src="/images/logo.png" alt="RN HOTEL Logo" fill className="object-contain" />
               </div>
             </div>
           </div>
@@ -188,7 +190,7 @@ export default function LoginPage() {
 
             <div className="text-center">
               <p className="text-xs text-gray-500">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="/register" className="text-blue-600 font-black hover:text-blue-700 hover:underline transition-all">
                   Sign Up
                 </Link>
