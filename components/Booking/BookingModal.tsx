@@ -27,6 +27,17 @@ export default function BookingModal({
   const [children, setChildren] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  const isCheckinInvalid = checkin !== "" && checkin < todayStr;
+  const isCheckoutInvalid = checkout !== "" && checkout <= checkin;
+
   const { addRoom } = useCart();
 
 
@@ -43,7 +54,7 @@ export default function BookingModal({
     return nights > 0 ? room.price * nights : 0;
   }, [room, nights]);
 
-  const canSubmit = !!room && nights > 0 && adults >= 1 && !isLoading;
+  const canSubmit = !!room && nights > 0 && adults >= 1 && !isLoading && !isCheckinInvalid && !isCheckoutInvalid;
 
   const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -130,6 +141,7 @@ export default function BookingModal({
               <input
                 type="date"
                 value={checkin}
+                min={todayStr}
                 onChange={(e) => {
                   setCheckin(e.target.value);
                   // if checkout is before checkin, clear it
@@ -137,7 +149,9 @@ export default function BookingModal({
                     setCheckout("");
                   }
                 }}
-                className="mt-1 w-full h-11 rounded-xl border px-3 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className={`mt-1 w-full h-11 rounded-xl border px-3 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15 ${
+                  isCheckinInvalid ? "border-red-500 text-red-600 focus:ring-red-500/20" : ""
+                }`}
               />
             </div>
 
@@ -148,9 +162,11 @@ export default function BookingModal({
               <input
                 type="date"
                 value={checkout}
-                min={checkin || undefined}
+                min={checkin || todayStr}
                 onChange={(e) => setCheckout(e.target.value)}
-                className="mt-1 w-full h-11 rounded-xl border px-3 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15"
+                className={`mt-1 w-full h-11 rounded-xl border px-3 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15 ${
+                  isCheckoutInvalid ? "border-red-500 text-red-600 focus:ring-red-500/20" : ""
+                }`}
               />
             </div>
           </div>
@@ -234,7 +250,7 @@ export default function BookingModal({
             disabled={!canSubmit}
             className={[
               "h-11 px-8 rounded-xl font-black text-white shadow-lg",
-              "bg-blue-600 hover:bg-blue-700",
+              !canSubmit ? "bg-slate-300" : "bg-blue-600 hover:bg-blue-700",
               "transition-all active:scale-95",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100",
             ].join(" ")}

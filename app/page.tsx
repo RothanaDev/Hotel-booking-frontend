@@ -8,7 +8,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import RoomSection from "@/components/Room/RoomSection";
 
-const toISODate = (d: Date) => d.toISOString().split("T")[0];
+const toISODate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function Home() {
   const router = useRouter();
